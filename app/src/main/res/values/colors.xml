@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Vibrant Material 3 Palette -->
+    <!-- Primary: Electric Blue -->
+    <color name="primary">#2962FF</color>
+    <color name="onPrimary">#FFFFFF</color>
+    <color name="primaryContainer">#DDE1FF</color>
+    <color name="onPrimaryContainer">#001453</color>
+
+    <!-- Secondary: Deep Cyan -->
+    <color name="secondary">#00B8D4</color>
+    <color name="onSecondary">#FFFFFF</color>
+    <color name="secondaryContainer">#A7EDFF</color>
+    <color name="onSecondaryContainer">#001F25</color>
+
+    <!-- Tertiary: Vivid Purple -->
+    <color name="tertiary">#AA00FF</color>
+    <color name="onTertiary">#FFFFFF</color>
+    <color name="tertiaryContainer">#F4D9FF</color>
+    <color name="onTertiaryContainer">#310048</color>
+
+    <!-- Error -->
+    <color name="error">#FF5252</color>
+    <color name="onError">#FFFFFF</color>
+    <color name="errorContainer">#FFDAD6</color>
+    <color name="onErrorContainer">#410002</color>
+
+    <!-- Background/Surface -->
+    <color name="background">#FAFAFF</color>
+    <color name="onBackground">#191C1E</color>
+    <color name="surface">#FAFAFF</color>
+    <color name="onSurface">#191C1E</color>
+    <color name="surfaceVariant">#E1E2EC</color>
+    <color name="onSurfaceVariant">#44474E</color>
+    <color name="outline">#74777F</color>
+
+    <!-- Dark Palette -->
+    <color name="primaryDark">#B4C5FF</color>
+    <color name="onPrimaryDark">#002F99</color>
+    <color name="primaryContainerDark">#0044CC</color>
+    <color name="onPrimaryContainerDark">#DDE1FF</color>
+
+    <color name="secondaryDark">#00D8F9</color>
+    <color name="onSecondaryDark">#00363F</color>
+    <color name="secondaryContainerDark">#004E5B</color>
+    <color name="onSecondaryContainerDark">#A7EDFF</color>
+
+    <color name="tertiaryDark">#EAB2FF</color>
+    <color name="onTertiaryDark">#5B008A</color>
+    <color name="tertiaryContainerDark">#8200C1</color>
+    <color name="onTertiaryContainerDark">#F4D9FF</color>
+
+    <color name="backgroundDark">#191C1E</color>
+    <color name="onBackgroundDark">#E1E2E6</color>
+    <color name="surfaceDark">#191C1E</color>
+    <color name="onSurfaceDark">#E1E2E6</color>
+    <color name="surfaceVariantDark">#44474E</color>
+    <color name="onSurfaceVariantDark">#C4C6D0</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PhotoCloud</string>
+    <string name="menu_camera">Камера</string>
+    <string name="menu_sessions">Сессии</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="camera_guide_text">Разместите транспортное средство в кадре</string>
+    <string name="cd_capture">Сделать фото</string>
+    <string name="res_720p">720p</string>
+    <string name="res_1080p">1080p</string>
+    <string name="sessions_title">Сессии техосмотра</string>
+    <string name="cd_new_session">Новая сессия</string>
+    <string name="hint_identifier">VIN или Госномер</string>
+    <string name="btn_create">Создать</string>
+    <string name="btn_cancel">Отмена</string>
+    <string name="status_synced">Синхронизировано</string>
+    <string name="status_pending">В ожидании</string>
+    <string name="settings_group_standards">Стандарты техосмотра</string>
+    <string name="settings_exif">Проверять GPS метаданные (EXIF)</string>
+    <string name="settings_size_check">Авто-контроль размера (300&#8211;700КБ)</string>
+    <string name="settings_group_sync">Облачная синхронизация</string>
+    <string name="settings_auto_sync">Автоматическая выгрузка в облако</string>
+    <string name="settings_btn_sync">Синхронизировать все сессии</string>
+    <string name="settings_app_info">PhotoCloud v1.0\nСоответствие регламенту: ЕАИСТО-М v2.3</string>
+
+    <string name="dashboard_title">Панель управления PhotoCloud</string>
+    <string name="label_google_drive">Google Диск</string>
+    <string name="label_yandex_disk">Яндекс.Диск</string>
+    <string name="label_no_account">Аккаунт не выбран</string>
+    <string name="label_manual_coords">Использовать координаты вручную</string>
+    <string name="label_coords_not_set">Координаты: Не установлены</string>
+    <string name="label_photo_gallery">Галерея фото</string>
+    <string name="btn_take_photo">Сделать фото</string>
+    <string name="hint_coordinates">Координаты</string>
+    <string name="coord_dialog_msg">Введите координаты в формате: Широта, Долгота (напр., 55.7558, 37.6173)</string>
+    <string name="btn_save">Сохранить</string>
+    <string name="empty_gallery">Фотографии не найдены</string>
+    <string name="label_metadata">Метаданные</string>
+    <string name="format_size">Размер: %1$s КБ</string>
+    <string name="format_resolution">Разрешение: %1$s</string>
+    <string name="format_datetime">Дата/Время: %1$s</string>
+    <string name="format_coordinates">Координаты: %1$s</string>
+    <string name="btn_upload_drive">Выгрузить на Google Диск</string>
+    <string name="btn_delete_photo">Удалить фото</string>
+    <string name="delete_confirm_title">Удалить фото?</string>
+    <string name="delete_confirm_msg">Это безвозвратно удалит фото из приложения и галереи устройства.</string>
+    <string name="delete_success">Фото успешно удалено</string>
+
+    <string name="status_saved_locally">сохранено на телефон</string>
+    <string name="status_uploading">ожидает выгрузки</string>
+    <string name="status_uploaded">выгружено на диск</string>
+    <string name="status_upload_error">ошибка выгрузки</string>
+    <string name="status_unknown">неизвестно</string>
+    <string name="format_status">Статус: %1$s</string>
+    <string name="msg_sign_in_failed">Ошибка входа</string>
+    <string name="msg_permissions_required">Для съемки необходимы разрешения</string>
+    <string name="msg_invalid_format">Неверный формат</string>
+    <string name="msg_upload_started">Выгрузка запущена</string>
+    <string name="msg_upload_success">Выгрузка завершена успешно</string>
+    <string name="msg_upload_failed">Ошибка выгрузки</string>
+    <string name="msg_select_account">Пожалуйста, выберите аккаунт Google на главном экране</string>
+    <string name="yandex_client_id">7a2faa1d31b949beb5a24ab1789f62d7</string>
+
+    <string name="label_subscription">Подписка</string>
+    <string name="label_no_subscription">Нет активной подписки</string>
+    <string name="format_subscription_valid_until">Действует до: %1$s</string>
+    <string name="msg_subscription_active">Ваша подписка действительна до %1$s</string>
+    <string name="btn_pay">Подписаться за 300 руб.</string>
+    <string name="please_sign_in_to_yandex_on_dashboard">Пожалуйста, выберите аккаунт Yandex на главном экране</string>
+</resources>

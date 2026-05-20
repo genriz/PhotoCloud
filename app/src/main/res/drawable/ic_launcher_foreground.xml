@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Camera Body with Lens Hole -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M74,38h-7.17L64,34H44l-2.83,4H34c-2.2,0-4,1.8-4,4v28c0,2.2,1.8,4,4,4h40c2.2,0,4-1.8,4-4V42C78,39.8,76.2,38,74,38z M54,68c-6.63,0-12-5.37-12-12s5.37-12,12-12s12,5.37,12,12S60.63,68,54,68z" />
+
+    <!-- Car silhouette inside the lens
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M59.5,54.5c-0.12-0.35-0.46-0.6-0.86-0.6H49.36c-0.4,0-0.74,0.25-0.86,0.6l-1.5,4.5v5.5c0,0.33,0.27,0.6,0.6,0.6h0.6c0.33,0,0.6-0.27,0.6-0.6v-0.6h10.8v0.6c0,0.33,0.27,0.6,0.6,0.6h0.6c0.33,0,0.6-0.27,0.6-0.6v-5.5L59.5,54.5z M50,61c-0.44,0-0.8-0.36-0.8-0.8s0.36-0.8,0.8-0.8s0.8,0.36,0.8,0.8S50.44,61,50,61z M58,61c-0.44,0-0.8-0.36-0.8-0.8s0.36-0.8,0.8-0.8s0.8,0.36,0.8,0.8S58.44,61,58,61z M49.5,58l1-3h7l1,3H49.5z" />
+    -->
+</vector>

@@ -1,0 +1,22 @@
+<resources>
+    <!-- Dark application theme. -->
+    <style name="Theme.PhotoCloud" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+        <item name="colorPrimary">@color/primaryDark</item>
+        <item name="colorOnPrimary">@color/onPrimaryDark</item>
+        <item name="colorPrimaryContainer">@color/primaryContainerDark</item>
+        <item name="colorOnPrimaryContainer">@color/onPrimaryContainerDark</item>
+        <item name="colorSecondary">@color/secondaryDark</item>
+        <item name="colorOnSecondary">@color/onSecondaryDark</item>
+        <item name="colorSecondaryContainer">@color/secondaryContainerDark</item>
+        <item name="colorOnSecondaryContainer">@color/onSecondaryContainerDark</item>
+        <item name="colorTertiary">@color/tertiaryDark</item>
+        <item name="colorOnTertiary">@color/onTertiaryDark</item>
+        <item name="colorTertiaryContainer">@color/tertiaryContainerDark</item>
+        <item name="colorOnTertiaryContainer">@color/onTertiaryContainerDark</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/dashboardFragment">
+
+    <fragment
+        android:id="@+id/dashboardFragment"
+        android:name="com.app.photocloud.ui.fragments.MainFragment"
+        android:label="Dashboard"
+        tools:layout="@layout/fragment_main">
+        <action
+            android:id="@+id/action_dashboardFragment_to_cameraFragment"
+            app:destination="@id/cameraFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_galleryFragment"
+            app:destination="@id/galleryFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_paymentFragment"
+            app:destination="@id/paymentFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/paymentFragment"
+        android:name="com.app.photocloud.ui.fragments.PaymentFragment"
+        android:label="Payment"
+        tools:layout="@layout/fragment_payment">
+        <argument
+            android:name="paymentUrl"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/cameraFragment"
+        android:name="com.app.photocloud.ui.fragments.CameraFragment"
+        android:label="Camera"
+        tools:layout="@layout/fragment_camera">
+        <action
+            android:id="@+id/action_cameraFragment_to_photoDetailsFragment"
+            app:destination="@id/photoDetailsFragment"
+            app:popUpTo="@id/cameraFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/galleryFragment"
+        android:name="com.app.photocloud.ui.fragments.GalleryFragment"
+        android:label="Gallery"
+        tools:layout="@layout/fragment_gallery">
+        <action
+            android:id="@+id/action_galleryFragment_to_photoDetailsFragment"
+            app:destination="@id/photoDetailsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/photoDetailsFragment"
+        android:name="com.app.photocloud.ui.fragments.PhotoDetailsFragment"
+        android:label="Photo Details"
+        tools:layout="@layout/fragment_photo_details">
+        <argument
+            android:name="photoPath"
+            app:argType="string" />
+    </fragment>
+</navigation>

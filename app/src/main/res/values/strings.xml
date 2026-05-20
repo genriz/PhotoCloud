@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PhotoCloud</string>
+    <string name="menu_camera">Camera</string>
+    <string name="menu_sessions">Sessions</string>
+    <string name="menu_settings">Settings</string>
+    <string name="camera_guide_text">Position vehicle within the frame</string>
+    <string name="cd_capture">Capture Photo</string>
+    <string name="res_720p">720p</string>
+    <string name="res_1080p">1080p</string>
+    <string name="sessions_title">Inspection Sessions</string>
+    <string name="cd_new_session">New Session</string>
+    <string name="hint_identifier">VIN or License Plate</string>
+    <string name="btn_create">Create</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="status_synced">Synced</string>
+    <string name="status_pending">Pending</string>
+    <string name="settings_group_standards">Inspection Standards</string>
+    <string name="settings_exif">Verify GPS Metadata (EXIF)</string>
+    <string name="settings_size_check">Auto-Compliance Size (300&#8211;700KB)</string>
+    <string name="settings_group_sync">Cloud Sync</string>
+    <string name="settings_auto_sync">Automatic Cloud Upload</string>
+    <string name="settings_btn_sync">Sync All Pending Sessions</string>
+    <string name="settings_app_info">PhotoCloud v1.0\nRegulatory Compliance: EAISTO-M v2.3</string>
+
+    <string name="dashboard_title">PhotoCloud Dashboard</string>
+    <string name="label_google_drive">Google Drive</string>
+    <string name="label_yandex_disk">Yandex.Disk</string>
+    <string name="label_no_account">No account selected</string>
+    <string name="label_manual_coords">Use Manual Coordinates</string>
+    <string name="label_coords_not_set">Coordinates: Not set</string>
+    <string name="label_photo_gallery">Photo Gallery</string>
+    <string name="btn_take_photo">Take Photo</string>
+    <string name="hint_coordinates">Coordinates</string>
+    <string name="coord_dialog_msg">Enter coordinates in format: Latitude, Longitude (e.g., 55.7558, 37.6173)</string>
+    <string name="btn_save">Save</string>
+    <string name="empty_gallery">No photos found</string>
+    <string name="label_metadata">Metadata</string>
+    <string name="format_size">Size: %1$s KB</string>
+    <string name="format_resolution">Resolution: %1$s</string>
+    <string name="format_datetime">Date/Time: %1$s</string>
+    <string name="format_coordinates">Coordinates: %1$s</string>
+    <string name="btn_upload_drive">Upload to Google Drive</string>
+    <string name="btn_delete_photo">Delete Photo</string>
+    <string name="delete_confirm_title">Delete Photo?</string>
+    <string name="delete_confirm_msg">This will permanently remove the photo from the app and the device gallery.</string>
+    <string name="delete_success">Photo deleted successfully</string>
+
+    <string name="status_saved_locally">Saved to phone</string>
+    <string name="status_uploading">Uploading...</string>
+    <string name="status_uploaded">Uploaded to Drive</string>
+    <string name="status_upload_error">Upload error</string>
+    <string name="status_unknown">Unknown</string>
+    <string name="format_status">Status: %1$s</string>
+    <string name="msg_sign_in_failed">Sign-in failed</string>
+    <string name="msg_permissions_required">Permissions required to take photo</string>
+    <string name="msg_invalid_format">Invalid format</string>
+    <string name="msg_upload_started">Upload started</string>
+    <string name="msg_upload_success">Upload successful</string>
+    <string name="msg_upload_failed">Upload failed</string>
+    <string name="msg_select_account">Please select Google account on Dashboard</string>
+    <string name="yandex_client_id">7a2faa1d31b949beb5a24ab1789f62d7</string>
+
+    <string name="label_subscription">Subscription</string>
+    <string name="label_no_subscription">No active subscription</string>
+    <string name="format_subscription_valid_until">Valid until: %1$s</string>
+    <string name="msg_subscription_active">Your subscription is valid until %1$s</string>
+    <string name="btn_pay">Subscribe for 300 RUB</string>
+    <string name="please_sign_in_to_yandex_on_dashboard">Please sign in to Yandex on Dashboard</string>
+</resources>
