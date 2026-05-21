@@ -13,6 +13,8 @@ import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -188,7 +190,6 @@ class MainFragment : Fragment() {
 
     private fun setupSubscription() {
         val subscriptionManager = SubscriptionManager(requireContext())
-        updateSubscriptionUI(subscriptionManager)
 
         binding.cardSubscription.setOnClickListener {
             binding.cardSubscription.animate()
@@ -209,9 +210,7 @@ class MainFragment : Fragment() {
                         }
                 }
         }
-    }
 
-    private fun updateSubscriptionUI(subscriptionManager: SubscriptionManager) {
         if (subscriptionManager.isSubscriptionActive()) {
             val date = subscriptionManager.getFormattedExpiryDate()
             binding.tvSubscriptionStatus.text = getString(R.string.format_subscription_valid_until, date)
@@ -258,6 +257,8 @@ class MainFragment : Fragment() {
             binding.tvGoogleAccount.text = savedEmail
         }
 
+        val credentialManager = CredentialManager.create(requireContext())
+
         binding.cardGoogleDrive.setOnClickListener {
             binding.cardGoogleDrive.animate()
                 .scaleX(0.95f)
@@ -269,28 +270,35 @@ class MainFragment : Fragment() {
                         .scaleY(1.0f)
                         .setDuration(100)
                         .withEndAction {
-                            val requestedScopes = listOf(
-                                Scope("https://www.googleapis.com/auth/drive.file"),
-                                Scope("https://www.googleapis.com/auth/drive.appfolder"),
-                                Scope("https://www.googleapis.com/auth/userinfo.email")
-                            )
-                            val request = AuthorizationRequest.builder()
-                                .setRequestedScopes(requestedScopes)
-                                .build()
+                            lifecycleScope.launch {
+                                try {
+                                    credentialManager.clearCredentialState(ClearCredentialStateRequest())
+                                } catch (e: Exception) {
+                                    Log.e("MainFragment", "Failed to clear credential state", e)
+                                }
 
-                            Identity.getAuthorizationClient(requireActivity())
-                                .authorize(request)
-                                .addOnSuccessListener { result ->
-                                    if (result.hasResolution()) {
-                                        val intentSender = result.pendingIntent?.intentSender
-                                        googleAuthLauncher.launch(IntentSenderRequest.Builder(intentSender!!).build())
-                                    } else {
-                                        result.accessToken?.let { fetchGoogleEmail(it) }
+                                val requestedScopes = listOf(
+                                    Scope("https://www.googleapis.com/auth/drive.file"),
+                                    Scope("https://www.googleapis.com/auth/userinfo.email")
+                                )
+                                val request = AuthorizationRequest.builder()
+                                    .setRequestedScopes(requestedScopes)
+                                    .build()
+
+                                Identity.getAuthorizationClient(requireActivity())
+                                    .authorize(request)
+                                    .addOnSuccessListener { result ->
+                                        if (result.hasResolution()) {
+                                            val intentSender = result.pendingIntent?.intentSender
+                                            googleAuthLauncher.launch(IntentSenderRequest.Builder(intentSender!!).build())
+                                        } else {
+                                            result.accessToken?.let { fetchGoogleEmail(it) }
+                                        }
                                     }
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(requireContext(), "Auth error: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(requireContext(), "Auth error: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    }
+                            }
                         }
                 }
         }

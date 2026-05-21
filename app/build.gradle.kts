@@ -20,10 +20,6 @@ android {
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["YANDEX_CLIENT_ID"] = "7a2faa1d31b949beb5a24ab1789f62d7"
-
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
     }
 
     signingConfigs {
@@ -87,6 +83,8 @@ dependencies {
     // Location & Auth
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
     // implementation(libs.yandex.auth)
     
     // Networking & Serialization
@@ -104,7 +102,7 @@ dependencies {
     implementation("com.google.guava:guava:33.0.0-android") {
         exclude(group = "org.apache.httpcomponents")
     }
-    implementation("com.google.auth:google-auth-library-oauth2-http:1.23.0")
+    implementation(libs.google.auth.library.oauth2.http)
 
     //yandex
     implementation(libs.yandex.auth)
