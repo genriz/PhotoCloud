@@ -10,12 +10,12 @@ ksp {
 
 android {
     namespace = "com.app.photocloud"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.app.photocloud"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -63,39 +63,26 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.material)
-    
-    // Navigation
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
-    
-    // Lifecycle
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
-    
-    // CameraX
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.exifinterface)
-    
-    // Location & Auth
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
-    // implementation(libs.yandex.auth)
-    
-    // Networking & Serialization
     implementation(libs.retrofit)
     implementation(libs.converter.moshi)
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.logging.interceptor)
     implementation(libs.kotlinx.serialization.core)
-    
-    // Google Drive API
     implementation(libs.google.api.client.android)
     implementation(libs.google.api.services.drive)
     implementation(libs.google.http.client.gson)
@@ -103,27 +90,17 @@ dependencies {
         exclude(group = "org.apache.httpcomponents")
     }
     implementation(libs.google.auth.library.oauth2.http)
-
-    //yandex
     implementation(libs.yandex.auth)
-
-    // Storage
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore.preferences)
-    
-    // Image Loading
     implementation(libs.coil)
-    
-    // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
-
     testImplementation(libs.androidx.core)
     testImplementation(libs.androidx.junit)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.runner)
