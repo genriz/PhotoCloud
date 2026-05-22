@@ -195,7 +195,7 @@ class CameraFragment : Fragment() {
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
-        val name = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.US)
+        val name = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
             .format(System.currentTimeMillis())
         
         val photoFile = File(
@@ -279,7 +279,7 @@ class CameraFragment : Fragment() {
             
             saveToGallery(processedFile, baseName)
             
-            val displayDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US).format(Date())
+            val displayDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
             viewModel.savePhoto(processedFile.absolutePath, displayDate)
 
             withContext(Dispatchers.Main) {
@@ -346,7 +346,7 @@ class CameraFragment : Fragment() {
                 }
             }
             
-            val timeStamp = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.US).format(Date())
+            val timeStamp = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
             exif.setAttribute(ExifInterface.TAG_DATETIME, timeStamp)
             
             exif.saveAttributes()

@@ -31,6 +31,7 @@
     <string name="label_coords_not_set">Координаты: Не установлены</string>
     <string name="label_photo_gallery">Галерея фото</string>
     <string name="btn_take_photo">Сделать фото</string>
+    <string name="btn_select_photo">Выбрать фото</string>
     <string name="hint_coordinates">Координаты</string>
     <string name="coord_dialog_msg">Введите координаты в формате: Широта, Долгота (напр., 55.7558, 37.6173)</string>
     <string name="btn_save">Сохранить</string>

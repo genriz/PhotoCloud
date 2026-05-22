@@ -19,6 +19,9 @@
         <action
             android:id="@+id/action_dashboardFragment_to_paymentFragment"
             app:destination="@id/paymentFragment" />
+        <action
+            android:id="@+id/action_dashboardFragment_to_photoDetailsFragment"
+            app:destination="@id/photoDetailsFragment" />
     </fragment>
 
     <fragment

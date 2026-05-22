@@ -11,11 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.app.photocloud.R
@@ -23,6 +25,7 @@ import com.app.photocloud.databinding.DialogManualCoordinatesBinding
 import com.app.photocloud.databinding.FragmentMainBinding
 import com.app.photocloud.data.local.SubscriptionManager
 import com.app.photocloud.data.sync.RobokassaService
+import com.app.photocloud.ui.viewmodels.MainViewModel
 import com.google.android.gms.auth.api.identity.AuthorizationRequest
 import com.google.android.gms.auth.api.identity.Identity
 import com.google.android.gms.common.api.Scope
@@ -39,11 +42,18 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import androidx.core.content.edit
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainFragment : Fragment() {
 
     private var _binding: FragmentMainBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: MainViewModel by activityViewModels()
 
     private lateinit var yandexAuthSdk: YandexAuthSdk
 
@@ -64,6 +74,50 @@ class MainFragment : Fragment() {
         }
     }
 
+    private val photoPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            handleSelectedPhoto(uri)
+        }
+    }
+
+    private fun handleSelectedPhoto(uri: android.net.Uri) {
+        lifecycleScope.launch {
+            val destinationFile = withContext(Dispatchers.IO) {
+                createInternalFileFromUri(uri)
+            }
+            if (destinationFile != null) {
+                val captureDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+                viewModel.savePhoto(destinationFile.absolutePath, captureDate)
+                
+                val bundle = Bundle().apply {
+                    putString("photoPath", destinationFile.absolutePath)
+                }
+                findNavController().navigate(R.id.action_dashboardFragment_to_photoDetailsFragment, bundle)
+            } else {
+                Toast.makeText(requireContext(), "Failed to process selected photo", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun createInternalFileFromUri(uri: android.net.Uri): File? {
+        return try {
+            val fileName = "gallery_photo_${System.currentTimeMillis()}.jpg"
+            val destFile = File(requireContext().getExternalFilesDir(null), fileName)
+            
+            requireContext().contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(destFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            destFile
+        } catch (e: Exception) {
+            Log.e("MainFragment", "Error copying photo", e)
+            null
+        }
+    }
+
     private fun fetchYandexEmail(token: String) {
         lifecycleScope.launch {
             try {
@@ -76,7 +130,7 @@ class MainFragment : Fragment() {
 
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) return@withContext null
-                        val body = response.body?.string() ?: return@withContext null
+                        val body = response.body.string()
                         val json = JSONObject(body)
                         if (json.has("default_email")) json.getString("default_email") else null
                     }
@@ -132,7 +186,7 @@ class MainFragment : Fragment() {
 
                     client.newCall(request).execute().use { response ->
                         if (!response.isSuccessful) return@withContext null
-                        val body = response.body?.string() ?: return@withContext null
+                        val body = response.body.string()
                         val json = JSONObject(body)
                         if (json.has("email")) json.getString("email") else null
                     }
@@ -186,6 +240,7 @@ class MainFragment : Fragment() {
         setupGallery()
         setupSubscription()
         setupTakePhoto()
+        setupSelectPhoto()
     }
 
     private fun setupSubscription() {
@@ -344,16 +399,21 @@ class MainFragment : Fragment() {
 
         binding.switchManualCoords.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit { putBoolean("is_manual_enabled", isChecked) }
-            if (isChecked && prefs.getString("manual_coords", null) == null) {
+            if (isChecked) {
                 showCoordinateDialog()
             } else {
-                binding.tvCurrentCoords.visibility = if (isChecked) View.VISIBLE else View.GONE
+                binding.tvCurrentCoords.visibility = View.GONE
             }
         }
     }
 
     private fun showCoordinateDialog() {
         val dialogBinding = DialogManualCoordinatesBinding.inflate(layoutInflater)
+        val prefs = requireContext().getSharedPreferences("coords_prefs", Context.MODE_PRIVATE)
+        val savedCoords = prefs.getString("manual_coords", null)
+        if (savedCoords != null){
+            dialogBinding.etCoordinates.setText(savedCoords)
+        }
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(R.string.label_manual_coords)
             .setView(dialogBinding.root)
@@ -371,6 +431,12 @@ class MainFragment : Fragment() {
             }
             .setNegativeButton(R.string.btn_cancel) { _, _ ->
                 binding.switchManualCoords.isChecked = false
+            }
+            .setOnDismissListener {
+                val coords = dialogBinding.etCoordinates.text.toString()
+                if (!validateCoordinates(coords)) {
+                    binding.switchManualCoords.isChecked = false
+                }
             }
             .show()
     }
@@ -422,6 +488,12 @@ class MainFragment : Fragment() {
                         }
                 }
 
+        }
+    }
+
+    private fun setupSelectPhoto() {
+        binding.fabSelectPhoto.setOnClickListener {
+            photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         }
     }
 
