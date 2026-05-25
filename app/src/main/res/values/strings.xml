@@ -68,4 +68,6 @@
     <string name="msg_subscription_active">Your subscription is valid until %1$s</string>
     <string name="btn_pay">Subscribe for 300 RUB</string>
     <string name="please_sign_in_to_yandex_on_dashboard">Please sign in to Yandex on Dashboard</string>
+    <string name="file_not_found">File not found</string>
+    <string name="metadata_error">Metadata error</string>
 </resources>

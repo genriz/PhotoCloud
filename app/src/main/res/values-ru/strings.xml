@@ -68,4 +68,6 @@
     <string name="msg_subscription_active">Ваша подписка действительна до %1$s</string>
     <string name="btn_pay">Подписаться за 300 руб.</string>
     <string name="please_sign_in_to_yandex_on_dashboard">Пожалуйста, выберите аккаунт Yandex на главном экране</string>
+    <string name="file_not_found">Файл не найден</string>
+    <string name="metadata_error">Ошибка метаданных</string>
 </resources>

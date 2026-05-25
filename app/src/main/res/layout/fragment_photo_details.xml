@@ -54,12 +54,10 @@
             app:cardCornerRadius="16dp"
             app:cardElevation="2dp">
 
-            <ImageView
-                android:id="@+id/iv_detail_photo"
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/vp_photo_pager"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="@string/label_photo_gallery"
-                android:scaleType="centerCrop"/>
+                android:layout_height="match_parent" />
         </com.google.android.material.card.MaterialCardView>
 
         <!-- Секция метаданных компактная -->

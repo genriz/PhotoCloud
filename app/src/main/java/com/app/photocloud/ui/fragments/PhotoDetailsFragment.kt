@@ -12,20 +12,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.SharedElementCallback
 import androidx.core.content.ContextCompat
-import androidx.core.view.doOnPreDraw
 import androidx.exifinterface.media.ExifInterface
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
-import coil.load
+import androidx.viewpager2.widget.ViewPager2
 import com.app.photocloud.R
 import com.app.photocloud.data.model.ItemPhoto
 import com.app.photocloud.databinding.FragmentPhotoDetailsBinding
+import com.app.photocloud.ui.adapters.PhotoPagerAdapter
 import com.app.photocloud.ui.viewmodels.MainViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
@@ -42,20 +45,44 @@ class PhotoDetailsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MainViewModel by activityViewModels()
-    private var photoFile: File? = null
+    private lateinit var pagerAdapter: PhotoPagerAdapter
+    private var currentPhoto: ItemPhoto? = null
+    private var initialPhotoPath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedElementEnterTransition = TransitionInflater.from(requireContext())
+        
+        val moveTransition = TransitionInflater.from(requireContext())
             .inflateTransition(android.R.transition.move)
             ?.setDuration(220)
+
+        sharedElementEnterTransition = moveTransition
+        sharedElementReturnTransition = moveTransition
+
+        setEnterSharedElementCallback(object : SharedElementCallback() {
+            override fun onMapSharedElements(
+                names: MutableList<String>,
+                sharedElements: MutableMap<String, View>
+            ) {
+                // Мапим текущее фото на имя, которое ожидает система
+                val recyclerView = binding.vpPhotoPager.getChildAt(0) as? RecyclerView
+                val holder = recyclerView?.findViewHolderForAdapterPosition(binding.vpPhotoPager.currentItem)
+                holder?.itemView?.findViewById<View>(R.id.iv_pager_photo)?.let { view ->
+                    val name = names.getOrNull(0)
+                    if (name != null) {
+                        sharedElements.clear()
+                        sharedElements[name] = view
+                    }
+                }
+            }
+        })
     }
 
     private val deleteLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            finalizeDeletion()
+            currentPhoto?.let { finalizeDeletion(it) }
         }
     }
 
@@ -70,52 +97,91 @@ class PhotoDetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val photoPath = arguments?.getString("photoPath") ?: return
-        photoFile = File(photoPath)
-        
-        binding.ivDetailPhoto.transitionName = photoPath
         postponeEnterTransition()
 
-        photoFile?.let { file ->
-            if (file.exists()) {
-                binding.ivDetailPhoto.load(file) {
-                    listener(
-                        onSuccess = { _, _ ->
-                            binding.ivDetailPhoto.doOnPreDraw {
-                                startPostponedEnterTransition()
-                            }
-                        },
-                        onError = { _, _ ->
-                            startPostponedEnterTransition()
-                        }
-                    )
-                }
-                displayMetadata(file)
-            } else {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                navigateBack()
+            }
+        })
+
+        initialPhotoPath = arguments?.getString("photoPath")
+        val path = initialPhotoPath ?: return
+        
+        setupViewPager(path)
+        setupButtons()
+    }
+
+    private fun setupViewPager(initialPath: String) {
+        pagerAdapter = PhotoPagerAdapter { loadedPath ->
+            // Запускаем анимацию только когда загружено целевое фото
+            if (loadedPath == (currentPhoto?.filePath ?: initialPhotoPath)) {
                 startPostponedEnterTransition()
             }
         }
+        binding.vpPhotoPager.adapter = pagerAdapter
+        binding.vpPhotoPager.offscreenPageLimit = 1
 
-        viewModel.getPhotoByPath(photoPath).observe(viewLifecycleOwner) { photo ->
-            photo?.let {
-                val (statusRes, colorRes) = when (it.uploadStatus) {
-                    ItemPhoto.STATUS_SAVED_LOCALLY -> R.string.status_saved_locally to R.color.primary
-                    ItemPhoto.STATUS_UPLOADING -> R.string.status_uploading to R.color.secondary
-                    ItemPhoto.STATUS_UPLOADED -> R.string.status_uploaded to android.R.color.holo_green_dark
-                    ItemPhoto.STATUS_UPLOAD_ERROR -> R.string.status_upload_error to R.color.error
-                    else -> R.string.status_unknown to R.color.outline
+        binding.vpPhotoPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                if (pagerAdapter.currentList.isNotEmpty()) {
+                    val photo = pagerAdapter.currentList[position]
+                    currentPhoto = photo
+                    updateUI(photo)
                 }
-                binding.tvDetailStatus.text = getString(R.string.format_status, getString(statusRes))
-                binding.tvDetailStatus.setTextColor(ContextCompat.getColor(requireContext(), colorRes))
+            }
+        })
 
-                val isUploading = it.uploadStatus == ItemPhoto.STATUS_UPLOADING
-                binding.btnUploadDrive.isEnabled = !isUploading
-                binding.btnUploadYandex.isEnabled = !isUploading
-                binding.progressUpload.visibility = if (isUploading) View.VISIBLE else View.GONE
+        viewModel.allPhotos.observe(viewLifecycleOwner) { photos ->
+            if (photos.isNullOrEmpty()) {
+                if (isAdded) findNavController().popBackStack()
+                return@observe
+            }
+            
+            pagerAdapter.submitList(photos) {
+                if (currentPhoto == null) {
+                    val index = photos.indexOfFirst { it.filePath == initialPath }
+                    if (index != -1) {
+                        binding.vpPhotoPager.setCurrentItem(index, false)
+                        currentPhoto = photos[index]
+                        updateUI(photos[index])
+                    } else {
+                        startPostponedEnterTransition()
+                    }
+                } else {
+                    val updatedPhoto = photos.find { it.filePath == currentPhoto?.filePath }
+                    if (updatedPhoto != null) {
+                        currentPhoto = updatedPhoto
+                        updateStatusUI(updatedPhoto)
+                    }
+                }
             }
         }
+    }
 
+    private fun updateUI(photo: ItemPhoto) {
+        displayMetadata(File(photo.filePath))
+        updateStatusUI(photo)
+    }
+
+    private fun updateStatusUI(photo: ItemPhoto) {
+        val (statusRes, colorRes) = when (photo.uploadStatus) {
+            ItemPhoto.STATUS_SAVED_LOCALLY -> R.string.status_saved_locally to R.color.primary
+            ItemPhoto.STATUS_UPLOADING -> R.string.status_uploading to R.color.secondary
+            ItemPhoto.STATUS_UPLOADED -> R.string.status_uploaded to android.R.color.holo_green_dark
+            ItemPhoto.STATUS_UPLOAD_ERROR -> R.string.status_upload_error to R.color.error
+            else -> R.string.status_unknown to R.color.outline
+        }
+        binding.tvDetailStatus.text = getString(R.string.format_status, getString(statusRes))
+        binding.tvDetailStatus.setTextColor(ContextCompat.getColor(requireContext(), colorRes))
+
+        val isUploading = photo.uploadStatus == ItemPhoto.STATUS_UPLOADING
+        binding.btnUploadDrive.isEnabled = !isUploading
+        binding.btnUploadYandex.isEnabled = !isUploading
+        binding.progressUpload.visibility = if (isUploading) View.VISIBLE else View.GONE
+    }
+
+    private fun setupButtons() {
         binding.btnBack.setOnClickListener {
             binding.btnBack.animate()
                 .scaleX(1.3f)
@@ -127,26 +193,28 @@ class PhotoDetailsFragment : Fragment() {
                         .scaleY(1.0f)
                         .setDuration(100)
                         .withEndAction {
-                            if (isAdded) findNavController().popBackStack()
+                            navigateBack()
                         }
                 }
         }
 
         binding.btnUploadDrive.setOnClickListener {
+            val photo = currentPhoto ?: return@setOnClickListener
             val prefs = requireContext().getSharedPreferences("google_prefs", Context.MODE_PRIVATE)
             val email = prefs.getString("google_email", null)
             if (email != null) {
-                photoFile?.let { uploadToDrive(it, email) }
+                uploadToDrive(File(photo.filePath), email)
             } else {
                 Toast.makeText(requireContext(), R.string.msg_select_account, Toast.LENGTH_SHORT).show()
             }
         }
 
         binding.btnUploadYandex.setOnClickListener {
+            val photo = currentPhoto ?: return@setOnClickListener
             val prefs = requireContext().getSharedPreferences("yandex_prefs", Context.MODE_PRIVATE)
             val token = prefs.getString("yandex_token", null)
             if (token != null) {
-                photoFile?.let { uploadToYandexDisk(it, token) }
+                uploadToYandexDisk(File(photo.filePath), token)
             } else {
                 Toast.makeText(requireContext(),
                     getString(R.string.please_sign_in_to_yandex_on_dashboard), Toast.LENGTH_SHORT).show()
@@ -156,6 +224,16 @@ class PhotoDetailsFragment : Fragment() {
         binding.btnDeletePhoto.setOnClickListener {
             showDeleteConfirmation()
         }
+    }
+
+    private fun navigateBack() {
+        currentPhoto?.let { photo ->
+            val result = Bundle().apply {
+                putString("returnedPath", photo.filePath)
+            }
+            parentFragmentManager.setFragmentResult("photo_details_result", result)
+        }
+        if (isAdded) findNavController().popBackStack()
     }
 
     private fun showDeleteConfirmation() {
@@ -170,14 +248,15 @@ class PhotoDetailsFragment : Fragment() {
     }
 
     private fun performDeletion() {
-        val file = photoFile ?: return
+        val photo = currentPhoto ?: return
+        val file = File(photo.filePath)
         lifecycleScope.launch {
             val deletedFromMediaStore = withContext(Dispatchers.IO) {
                 deleteFromMediaStore(file.name)
             }
 
             if (deletedFromMediaStore) {
-                finalizeDeletion()
+                finalizeDeletion(photo)
             }
         }
     }
@@ -210,17 +289,16 @@ class PhotoDetailsFragment : Fragment() {
         return true
     }
 
-    private fun finalizeDeletion() {
-        val file = photoFile ?: return
+    private fun finalizeDeletion(photo: ItemPhoto) {
+        val file = File(photo.filePath)
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 if (file.exists()) {
                     file.delete()
                 }
             }
-            viewModel.deletePhoto(file.absolutePath)
+            viewModel.deletePhoto(photo.filePath)
             Toast.makeText(requireContext(), R.string.delete_success, Toast.LENGTH_SHORT).show()
-            findNavController().navigateUp()
         }
     }
 
@@ -235,6 +313,10 @@ class PhotoDetailsFragment : Fragment() {
     }
 
     private fun displayMetadata(file: File) {
+        if (!file.exists()) {
+            binding.tvDetailSize.text = getString(R.string.file_not_found)
+            return
+        }
         val sizeInKb = file.length() / 1024.0
         val df = DecimalFormat("#.##")
         binding.tvDetailSize.text = getString(R.string.format_size, df.format(sizeInKb))
@@ -268,7 +350,7 @@ class PhotoDetailsFragment : Fragment() {
             }
         } catch (e: Exception) {
             Log.v("DASD", e.localizedMessage?:"exception null")
-            binding.tvDetailResolution.text = "Metadata error"
+            binding.tvDetailResolution.text = getString(R.string.metadata_error)
         }
     }
 
