@@ -48,6 +48,7 @@ class PhotoDetailsFragment : Fragment() {
     private lateinit var pagerAdapter: PhotoPagerAdapter
     private var currentPhoto: ItemPhoto? = null
     private var initialPhotoPath: String? = null
+    private var isInitialPositionSet = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,7 +65,6 @@ class PhotoDetailsFragment : Fragment() {
                 names: MutableList<String>,
                 sharedElements: MutableMap<String, View>
             ) {
-                // Мапим текущее фото на имя, которое ожидает система
                 val recyclerView = binding.vpPhotoPager.getChildAt(0) as? RecyclerView
                 val holder = recyclerView?.findViewHolderForAdapterPosition(binding.vpPhotoPager.currentItem)
                 holder?.itemView?.findViewById<View>(R.id.iv_pager_photo)?.let { view ->
@@ -114,7 +114,6 @@ class PhotoDetailsFragment : Fragment() {
 
     private fun setupViewPager(initialPath: String) {
         pagerAdapter = PhotoPagerAdapter { loadedPath ->
-            // Запускаем анимацию только когда загружено целевое фото
             if (loadedPath == (currentPhoto?.filePath ?: initialPhotoPath)) {
                 startPostponedEnterTransition()
             }
@@ -134,25 +133,33 @@ class PhotoDetailsFragment : Fragment() {
 
         viewModel.allPhotos.observe(viewLifecycleOwner) { photos ->
             if (photos.isNullOrEmpty()) {
-                if (isAdded) findNavController().popBackStack()
+                if (isInitialPositionSet && isAdded) {
+                    findNavController().popBackStack()
+                }
                 return@observe
             }
             
             pagerAdapter.submitList(photos) {
-                if (currentPhoto == null) {
-                    val index = photos.indexOfFirst { it.filePath == initialPath }
-                    if (index != -1) {
-                        binding.vpPhotoPager.setCurrentItem(index, false)
-                        currentPhoto = photos[index]
-                        updateUI(photos[index])
-                    } else {
-                        startPostponedEnterTransition()
+                if (_binding == null) return@submitList
+
+                if (!isInitialPositionSet) {
+                    val targetIndex = photos.indexOfFirst { it.filePath == initialPath }
+                    if (targetIndex != -1) {
+                        binding.vpPhotoPager.post {
+                            if (_binding != null) {
+                                binding.vpPhotoPager.setCurrentItem(targetIndex, false)
+                                currentPhoto = photos[targetIndex]
+                                updateUI(photos[targetIndex])
+                                isInitialPositionSet = true
+                            }
+                        }
                     }
                 } else {
-                    val updatedPhoto = photos.find { it.filePath == currentPhoto?.filePath }
-                    if (updatedPhoto != null) {
-                        currentPhoto = updatedPhoto
-                        updateStatusUI(updatedPhoto)
+                    val currentPos = binding.vpPhotoPager.currentItem
+                    val photoAtPos = if (currentPos in photos.indices) photos[currentPos] else null
+                    if (photoAtPos != null) {
+                        currentPhoto = photoAtPos
+                        updateUI(photoAtPos)
                     }
                 }
             }
@@ -160,7 +167,7 @@ class PhotoDetailsFragment : Fragment() {
     }
 
     private fun updateUI(photo: ItemPhoto) {
-        displayMetadata(File(photo.filePath))
+        displayMetadata(photo)
         updateStatusUI(photo)
     }
 
@@ -264,12 +271,19 @@ class PhotoDetailsFragment : Fragment() {
     private fun deleteFromMediaStore(fileName: String): Boolean {
         val resolver = requireContext().contentResolver
         val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
-        val selectionArgs = arrayOf(fileName)
-
-        val cursor = resolver.query(uri, arrayOf(MediaStore.MediaColumns._ID), selection, selectionArgs, null)
-        val id = cursor?.use {
-            if (it.moveToFirst()) it.getLong(it.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)) else null
+        
+        val namesToTry = listOf(fileName, fileName.replace(":", "_"))
+        
+        var id: Long? = null
+        for (name in namesToTry) {
+            val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ?"
+            val selectionArgs = arrayOf(name)
+            resolver.query(uri, arrayOf(MediaStore.MediaColumns._ID), selection, selectionArgs, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+                }
+            }
+            if (id != null) break
         }
 
         if (id != null) {
@@ -312,7 +326,8 @@ class PhotoDetailsFragment : Fragment() {
         Toast.makeText(requireContext(), R.string.msg_upload_started, Toast.LENGTH_SHORT).show()
     }
 
-    private fun displayMetadata(file: File) {
+    private fun displayMetadata(photo: ItemPhoto) {
+        val file = File(photo.filePath)
         if (!file.exists()) {
             binding.tvDetailSize.text = getString(R.string.file_not_found)
             return
@@ -330,15 +345,15 @@ class PhotoDetailsFragment : Fragment() {
             val exifDate = exif.getAttribute(ExifInterface.TAG_DATETIME)
             val displayDate = if (exifDate != null) {
                 try {
-                    val parser = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.US)
-                    val formatter = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.US)
+                    val parser = SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault())
+                    val formatter = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.getDefault())
                     parser.parse(exifDate)?.let { formatter.format(it) } ?: exifDate
                 } catch (e: Exception) {
                     Log.v("DASD", e.localizedMessage?:"exception null")
                     exifDate
                 }
             } else {
-                "Unknown"
+                photo.captureDate
             }
             binding.tvDetailDatetime.text = getString(R.string.format_datetime, displayDate)
 

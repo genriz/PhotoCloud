@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import androidx.core.graphics.scale
 
 class CameraFragment : Fragment() {
 
@@ -124,11 +125,12 @@ class CameraFragment : Fragment() {
             return
         }
 
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
-            .setMinUpdateIntervalMillis(2000)
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+            .setMinUpdateIntervalMillis(1000)
             .build()
 
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        fusedLocationClient.lastLocation.addOnCompleteListener { task ->  lastStableLocation = task.result }
     }
 
     private fun updateStableLocation(newLocation: Location) {
@@ -195,7 +197,9 @@ class CameraFragment : Fragment() {
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
-        val name = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
+        val name = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.getDefault())
+            .format(System.currentTimeMillis())
+        val captureDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault())
             .format(System.currentTimeMillis())
         
         val photoFile = File(
@@ -216,7 +220,7 @@ class CameraFragment : Fragment() {
                 override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                     if (isAdded) {
                         lifecycleScope.launch {
-                            processAndSaveImage(photoFile, name)
+                            processAndSaveImage(photoFile, name, captureDate)
                         }
                     }
                 }
@@ -224,7 +228,7 @@ class CameraFragment : Fragment() {
         )
     }
 
-    private suspend fun processAndSaveImage(rawFile: File, baseName: String) {
+    private suspend fun processAndSaveImage(rawFile: File, baseName: String, captureDate: String) {
         withContext(Dispatchers.IO) {
             val exifRaw = try { ExifInterface(rawFile.absolutePath) } catch (e: Exception) {
                 Log.v("DASD", e.localizedMessage?:"exception null")
@@ -244,13 +248,15 @@ class CameraFragment : Fragment() {
                 else -> originalBitmap
             }
 
+            val scaledBitmap = scaleBitmapTo1080p(rotatedBitmap)
+
             var quality = 100
             var compressedData: ByteArray
             
             val targetMaxSize = 700 * 1024
             
             var stream = ByteArrayOutputStream()
-            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
             compressedData = stream.toByteArray()
 
             if (compressedData.size > targetMaxSize) {
@@ -270,6 +276,9 @@ class CameraFragment : Fragment() {
             FileOutputStream(processedFile).use { it.write(compressedData) }
             rawFile.delete()
 
+            if (scaledBitmap != rotatedBitmap) {
+                scaledBitmap.recycle()
+            }
             if (rotatedBitmap != originalBitmap) {
                 rotatedBitmap.recycle()
             }
@@ -279,8 +288,7 @@ class CameraFragment : Fragment() {
             
             saveToGallery(processedFile, baseName)
             
-            val displayDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
-            viewModel.savePhoto(processedFile.absolutePath, displayDate)
+            viewModel.savePhoto(processedFile.absolutePath, captureDate)
 
             withContext(Dispatchers.Main) {
                 if (isAdded) {
@@ -291,6 +299,28 @@ class CameraFragment : Fragment() {
                 }
             }
         }
+    }
+
+    private fun scaleBitmapTo1080p(source: Bitmap): Bitmap {
+        val maxDimension = 1920
+        val width = source.width
+        val height = source.height
+
+        if (width <= maxDimension && height <= maxDimension) return source
+
+        val ratio = width.toFloat() / height.toFloat()
+        val newWidth: Int
+        val newHeight: Int
+
+        if (width > height) {
+            newWidth = maxDimension
+            newHeight = (maxDimension / ratio).toInt()
+        } else {
+            newHeight = maxDimension
+            newWidth = (maxDimension * ratio).toInt()
+        }
+
+        return source.scale(newWidth, newHeight)
     }
 
     private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
@@ -346,7 +376,7 @@ class CameraFragment : Fragment() {
                 }
             }
             
-            val timeStamp = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+            val timeStamp = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.getDefault()).format(Date())
             exif.setAttribute(ExifInterface.TAG_DATETIME, timeStamp)
             
             exif.saveAttributes()

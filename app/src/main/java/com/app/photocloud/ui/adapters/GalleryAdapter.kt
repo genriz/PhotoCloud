@@ -1,5 +1,6 @@
 package com.app.photocloud.ui.adapters
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ class GalleryAdapter(
     private val onPhotoClick: (ItemPhoto, View) -> Unit
 ) : RecyclerView.Adapter<GalleryAdapter.GalleryViewHolder>() {
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateData(newPhotos: List<ItemPhoto>) {
         android.util.Log.d("GalleryAdapter", "Updating data with ${newPhotos.size} photos")
         photos = newPhotos

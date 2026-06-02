@@ -4,6 +4,10 @@ import android.app.Activity
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -42,11 +46,14 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import androidx.core.content.edit
+import androidx.exifinterface.media.ExifInterface
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.core.graphics.scale
 
 class MainFragment : Fragment() {
 
@@ -82,28 +89,24 @@ class MainFragment : Fragment() {
         }
     }
 
-    private fun handleSelectedPhoto(uri: android.net.Uri) {
+    private fun handleSelectedPhoto(uri: Uri) {
         lifecycleScope.launch {
+            val captureDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
+            val baseName = SimpleDateFormat("dd-MM-yyyy_HH-mm-ss", Locale.getDefault()).format(Date())
             val destinationFile = withContext(Dispatchers.IO) {
-                createInternalFileFromUri(uri)
+                createInternalFileFromUri(uri, captureDate)
             }
             if (destinationFile != null) {
-                val captureDate = SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(Date())
-                viewModel.savePhoto(destinationFile.absolutePath, captureDate)
-                
-                val bundle = Bundle().apply {
-                    putString("photoPath", destinationFile.absolutePath)
-                }
-                findNavController().navigate(R.id.action_dashboardFragment_to_photoDetailsFragment, bundle)
+                processAndSaveImage(destinationFile, captureDate, baseName)
             } else {
                 Toast.makeText(requireContext(), "Failed to process selected photo", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun createInternalFileFromUri(uri: android.net.Uri): File? {
+    private fun createInternalFileFromUri(uri: Uri, captureDate: String): File? {
         return try {
-            val fileName = "gallery_photo_${System.currentTimeMillis()}.jpg"
+            val fileName = "_$captureDate.jpg"
             val destFile = File(requireContext().getExternalFilesDir(null), fileName)
             
             requireContext().contentResolver.openInputStream(uri)?.use { input ->
@@ -116,6 +119,103 @@ class MainFragment : Fragment() {
             Log.e("MainFragment", "Error copying photo", e)
             null
         }
+    }
+
+    private suspend fun processAndSaveImage(rawFile: File, captureDate: String, baseName: String) {
+        withContext(Dispatchers.IO) {
+            val exifRaw = try { ExifInterface(rawFile.absolutePath) } catch (e: Exception) {
+                Log.v("DASD", e.localizedMessage?:"exception null")
+                null
+            }
+            val orientation = exifRaw?.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            ) ?: ExifInterface.ORIENTATION_NORMAL
+
+            val originalBitmap = BitmapFactory.decodeFile(rawFile.absolutePath) ?: return@withContext
+
+            val rotatedBitmap = when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> rotateBitmap(originalBitmap, 90f)
+                ExifInterface.ORIENTATION_ROTATE_180 -> rotateBitmap(originalBitmap, 180f)
+                ExifInterface.ORIENTATION_ROTATE_270 -> rotateBitmap(originalBitmap, 270f)
+                else -> originalBitmap
+            }
+            
+            val scaledBitmap = scaleBitmapTo1080p(rotatedBitmap)
+
+            var quality = 100
+            var compressedData: ByteArray
+
+            val targetMaxSize = 700 * 1024
+
+            var stream = ByteArrayOutputStream()
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
+            compressedData = stream.toByteArray()
+
+            if (compressedData.size > targetMaxSize) {
+                while (compressedData.size > targetMaxSize && quality > 10) {
+                    quality -= 5
+                    stream = ByteArrayOutputStream()
+                    scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
+                    compressedData = stream.toByteArray()
+                }
+            }
+
+            val processedFile = File(
+                rawFile.parent,
+                "$baseName.jpg"
+            )
+
+            FileOutputStream(processedFile).use { it.write(compressedData) }
+            rawFile.delete()
+
+            if (scaledBitmap != rotatedBitmap) {
+                scaledBitmap.recycle()
+            }
+            if (rotatedBitmap != originalBitmap) {
+                rotatedBitmap.recycle()
+            }
+            originalBitmap.recycle()
+
+            viewModel.savePhoto(processedFile.absolutePath, captureDate)
+
+            withContext(Dispatchers.Main) {
+                if (isAdded) {
+                    val bundle = Bundle().apply {
+                        putString("photoPath", processedFile.absolutePath)
+                    }
+                    findNavController().navigate(R.id.action_dashboardFragment_to_photoDetailsFragment, bundle)
+                }
+            }
+        }
+    }
+
+    private fun scaleBitmapTo1080p(source: Bitmap): Bitmap {
+        val maxDimension = 1920
+        val width = source.width
+        val height = source.height
+
+        if (width <= maxDimension && height <= maxDimension) return source
+
+        val ratio = width.toFloat() / height.toFloat()
+        val newWidth: Int
+        val newHeight: Int
+
+        if (width > height) {
+            newWidth = maxDimension
+            newHeight = (maxDimension / ratio).toInt()
+        } else {
+            newHeight = maxDimension
+            newWidth = (maxDimension * ratio).toInt()
+        }
+
+        return source.scale(newWidth, newHeight)
+    }
+
+    private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(angle)
+        return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
     }
 
     private fun fetchYandexEmail(token: String) {
