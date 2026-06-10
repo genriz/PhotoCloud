@@ -62,7 +62,6 @@ class CameraFragment : Fragment() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var lastStableLocation: Location? = null
     private val locationHistory = mutableListOf<Location>()
-    private val MAX_LOCATION_HISTORY = 5
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
@@ -396,5 +395,6 @@ class CameraFragment : Fragment() {
         private const val TAG = "CameraFragment"
         private val RESOLUTION_720P = Size(1280, 720)
         private val RESOLUTION_1080P = Size(1920, 1080)
+        private const val MAX_LOCATION_HISTORY = 5
     }
 }

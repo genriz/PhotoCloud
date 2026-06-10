@@ -7,7 +7,6 @@ import com.app.photocloud.data.model.ItemPhoto
 import com.app.photocloud.data.sync.GoogleDriveService
 import com.app.photocloud.data.sync.YandexDiskService
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
@@ -79,9 +78,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun getPhotoByPath(filePath: String): LiveData<ItemPhoto?> {
-        return dao.getPhotoByPath(filePath).asLiveData()
-    }
+//    fun getPhotoByPath(filePath: String): LiveData<ItemPhoto?> {
+//        return dao.getPhotoByPath(filePath).asLiveData()
+//    }
 
     fun deletePhoto(filePath: String) {
         viewModelScope.launch {
