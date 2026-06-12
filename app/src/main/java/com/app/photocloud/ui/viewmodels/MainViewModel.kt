@@ -1,11 +1,21 @@
 package com.app.photocloud.ui.viewmodels
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
+import android.location.Location
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.*
 import com.app.photocloud.data.local.AppDatabase
 import com.app.photocloud.data.model.ItemPhoto
 import com.app.photocloud.data.sync.GoogleDriveService
 import com.app.photocloud.data.sync.YandexDiskService
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import java.io.File
@@ -19,6 +29,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val allPhotos: LiveData<List<ItemPhoto>> = dao.getAllPhotos().asLiveData()
 
     private val _uploadResult = MutableSharedFlow<String>()
+
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    var lastStableLocation: Location? = null
+    private val locationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            for (location in locationResult.locations) {
+                if (lastStableLocation==null){
+                    lastStableLocation = location
+                } else {
+                    if (location.accuracy < lastStableLocation!!.accuracy){
+                        lastStableLocation = location
+                    }
+                }
+            }
+        }
+    }
+
+    fun startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(application, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return
+        }
+
+        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+            .setMinUpdateIntervalMillis(1000)
+            .build()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        fusedLocationClient.lastLocation.addOnCompleteListener { task ->  lastStableLocation = task.result }
+    }
 
     fun uploadPhoto(file: File, accountEmail: String) {
         viewModelScope.launch {

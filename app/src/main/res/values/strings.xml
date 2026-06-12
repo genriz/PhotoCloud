@@ -70,4 +70,6 @@
     <string name="please_sign_in_to_yandex_on_dashboard">Please sign in to Yandex on Dashboard</string>
     <string name="file_not_found">File not found</string>
     <string name="metadata_error">Metadata error</string>
+    <string name="coords">Coordinates: …</string>
+    <string name="update">Update</string>
 </resources>

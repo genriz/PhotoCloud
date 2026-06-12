@@ -231,6 +231,28 @@ class PhotoDetailsFragment : Fragment() {
         binding.btnDeletePhoto.setOnClickListener {
             showDeleteConfirmation()
         }
+
+        binding.tvDetailCoordinatesUpdate.setOnClickListener {
+            updateLocation()
+        }
+    }
+
+    private fun updateLocation() {
+        viewModel.lastStableLocation?.let{ location ->
+            val exif = ExifInterface(currentPhoto!!.filePath)
+            exif.setLatLong(location.latitude, location.longitude)
+            exif.setAttribute(ExifInterface.TAG_GPS_ALTITUDE, location.altitude.toString())
+            exif.setAttribute(ExifInterface.TAG_GPS_PROCESSING_METHOD, location.provider)
+            exif.saveAttributes()
+            val latLong = exif.latLong
+            if (latLong != null) {
+                val formattedCoordinates = String.format(Locale.US, "%.4f, %.4f", latLong[0], latLong[1])
+                binding.tvDetailCoordinates.text = getString(R.string.format_coordinates, formattedCoordinates)
+            } else {
+                binding.tvDetailCoordinates.text = getString(R.string.format_coordinates, "Not available")
+            }
+            //viewModel.savePhoto(currentPhoto!!.filePath, currentPhoto!!.captureDate)
+        }
     }
 
     private fun navigateBack() {
@@ -359,7 +381,8 @@ class PhotoDetailsFragment : Fragment() {
 
             val latLong = exif.latLong
             if (latLong != null) {
-                binding.tvDetailCoordinates.text = getString(R.string.format_coordinates, "${latLong[0]}, ${latLong[1]}")
+                val formattedCoordinates = String.format(Locale.US, "%.4f, %.4f", latLong[0], latLong[1])
+                binding.tvDetailCoordinates.text = getString(R.string.format_coordinates, formattedCoordinates)
             } else {
                 binding.tvDetailCoordinates.text = getString(R.string.format_coordinates, "Not available")
             }

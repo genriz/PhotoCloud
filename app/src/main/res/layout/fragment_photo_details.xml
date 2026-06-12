@@ -93,12 +93,27 @@
                     android:layout_height="wrap_content"
                     tools:text="Дата: 12-05-2026" />
 
-                <TextView
-                    android:id="@+id/tv_detail_coordinates"
-                    style="@style/TextAppearance.Material3.BodySmall"
+                <LinearLayout
+                    android:id="@+id/layout_coordinates"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    tools:text="Координаты: ..." />
+                    android:orientation="horizontal">
+                    <TextView
+                        android:id="@+id/tv_detail_coordinates"
+                        style="@style/TextAppearance.Material3.BodySmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/coords"/>
+                    <TextView
+                        android:id="@+id/tv_detail_coordinates_update"
+                        style="@style/TextAppearance.Material3.BodySmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/update"
+                        android:padding="4dp"
+                        android:textColor="@color/design_default_color_primary"
+                        android:foreground="?attr/selectableItemBackground"/>
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tv_detail_status"

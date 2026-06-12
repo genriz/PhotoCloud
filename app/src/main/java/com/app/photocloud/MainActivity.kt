@@ -6,15 +6,19 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.app.photocloud.databinding.ActivityMainBinding
+import com.app.photocloud.ui.viewmodels.MainViewModel
+import kotlin.getValue
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private val viewModel: MainViewModel by viewModels()
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -24,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         
         if (cameraGranted && locationGranted) {
             Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show()
+            viewModel.startLocationUpdates()
         } else {
             Toast.makeText(this, "Camera and Location permissions are required", Toast.LENGTH_LONG).show()
         }
@@ -58,6 +63,8 @@ class MainActivity : AppCompatActivity() {
 
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        } else {
+            viewModel.startLocationUpdates()
         }
     }
 }

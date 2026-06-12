@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.location.Location
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -18,7 +17,6 @@ import android.widget.Toast
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -56,12 +54,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.core.graphics.scale
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
 
 class MainFragment : Fragment() {
 
@@ -95,45 +87,6 @@ class MainFragment : Fragment() {
         if (uri != null) {
             handleSelectedPhoto(uri)
         }
-    }
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var lastStableLocation: Location? = null
-    private val locationHistory = mutableListOf<Location>()
-
-    private val locationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            for (location in locationResult.locations) {
-                updateStableLocation(location)
-            }
-        }
-    }
-
-    private fun startLocationUpdates() {
-        if (ActivityCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return
-        }
-
-        val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
-            .setMinUpdateIntervalMillis(1000)
-            .build()
-
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
-        fusedLocationClient.lastLocation.addOnCompleteListener { task ->  lastStableLocation = task.result }
-    }
-    private fun updateStableLocation(newLocation: Location) {
-        locationHistory.add(newLocation)
-        if (locationHistory.size > MAX_LOCATION_HISTORY) {
-            locationHistory.removeAt(0)
-        }
-
-        var bestLocation = locationHistory[0]
-        for (loc in locationHistory) {
-            if (loc.accuracy < bestLocation.accuracy) {
-                bestLocation = loc
-            }
-        }
-        lastStableLocation = bestLocation
     }
 
     private fun handleSelectedPhoto(uri: Uri) {
@@ -286,7 +239,7 @@ class MainFragment : Fragment() {
                     }
                 }
             } else {
-                lastStableLocation?.let { location ->
+                viewModel.lastStableLocation?.let { location ->
                     exif.setLatLong(location.latitude, location.longitude)
                     exif.setAttribute(ExifInterface.TAG_GPS_ALTITUDE, location.altitude.toString())
                     exif.setAttribute(ExifInterface.TAG_GPS_PROCESSING_METHOD, location.provider)
@@ -418,8 +371,6 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-
         setupGoogleDrive()
         setupYandexDisk()
         setupCoordinates()
@@ -427,7 +378,6 @@ class MainFragment : Fragment() {
         setupSubscription()
         setupTakePhoto()
         setupSelectPhoto()
-        startLocationUpdates()
     }
 
     private fun setupSubscription() {
@@ -691,6 +641,5 @@ class MainFragment : Fragment() {
 
     companion object {
         private const val TAG = "MainFragment"
-        private const val MAX_LOCATION_HISTORY = 5
     }
 }
