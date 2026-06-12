@@ -70,4 +70,6 @@
     <string name="please_sign_in_to_yandex_on_dashboard">Пожалуйста, выберите аккаунт Yandex на главном экране</string>
     <string name="file_not_found">Файл не найден</string>
     <string name="metadata_error">Ошибка метаданных</string>
+    <string name="coords">Координаты: …</string>
+    <string name="update">Обновить</string>
 </resources>
